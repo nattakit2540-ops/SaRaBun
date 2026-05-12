@@ -7,20 +7,21 @@
 }
 
 :root {
-  --ink: #172033;
-  --muted: #667085;
-  --line: #e5eaf4;
-  --panel: #ffffff;
-  --bg: #f7f9ff;
-  --blue: #3b82f6;
-  --green: #10b981;
-  --orange: #f59e0b;
-  --pink: #ec4899;
-  --violet: #8b5cf6;
-  --cyan: #06b6d4;
-  --red: #ef4444;
-  --radius: 8px;
-  --shadow: 0 18px 44px rgba(37, 52, 92, 0.11);
+  --ink: #403a35;
+  --muted: #80776d;
+  --line: #e8dfd2;
+  --panel: #fffdf8;
+  --bg: #fbf7ef;
+  --cream: #f5ecdf;
+  --blue: #8faec0;
+  --green: #a9bea3;
+  --orange: #c98568;
+  --pink: #d6a0a5;
+  --violet: #b6a9c9;
+  --cyan: #9dbcc0;
+  --red: #c46f6b;
+  --radius: 22px;
+  --shadow: 0 18px 48px rgba(100, 80, 60, 0.1);
 }
 
 * {
@@ -66,9 +67,7 @@ body {
   font-family: "Itim", "TorsilpLamun", "TH Sarabun New", "Leelawadee UI", Tahoma, sans-serif;
   color: var(--ink);
   background:
-    radial-gradient(circle at 10% 10%, rgba(59, 130, 246, 0.15), transparent 30%),
-    radial-gradient(circle at 90% 0%, rgba(236, 72, 153, 0.12), transparent 26%),
-    linear-gradient(135deg, rgba(16, 185, 129, 0.08), transparent 38%),
+    linear-gradient(180deg, rgba(255, 253, 248, 0.92), rgba(251, 247, 239, 0.98)),
     var(--bg);
   font-size: 22px;
   letter-spacing: 0;
@@ -100,8 +99,8 @@ button {
   width: min(470px, 100%);
   display: grid;
   gap: 20px;
-  padding: 32px;
-  background: rgba(255, 255, 255, 0.92);
+  padding: 34px;
+  background: rgba(255, 253, 248, 0.96);
   border: 1px solid var(--line);
   border-radius: var(--radius);
   box-shadow: var(--shadow);
@@ -113,8 +112,8 @@ button {
   height: 60px;
   display: grid;
   place-items: center;
-  border-radius: 8px;
-  background: linear-gradient(135deg, var(--blue), var(--violet));
+  border-radius: 18px;
+  background: linear-gradient(135deg, var(--orange), var(--pink));
   color: #fff;
   font-weight: 700;
 }
@@ -146,7 +145,7 @@ button {
   margin-top: 4px;
   font-size: 26px;
   line-height: 1.1;
-  color: #274060;
+  color: #6f5847;
 }
 
 h1,
@@ -175,7 +174,7 @@ h4 {
 }
 
 .eyebrow {
-  color: #2563eb;
+  color: #a56452;
   font-size: 18px;
   font-weight: 700;
 }
@@ -201,7 +200,7 @@ h4 {
 label {
   display: grid;
   gap: 6px;
-  color: #384158;
+  color: #5c5148;
   font-weight: 700;
 }
 
@@ -217,9 +216,9 @@ select,
 textarea {
   width: 100%;
   border: 1px solid var(--line);
-  border-radius: 8px;
-  padding: 10px 12px;
-  background: #fff;
+  border-radius: 18px;
+  padding: 11px 14px;
+  background: #fffdf9;
   color: var(--ink);
   min-height: 46px;
   transition: border-color 0.18s ease, box-shadow 0.18s ease, background-color 0.18s ease;
@@ -229,8 +228,8 @@ input:focus,
 select:focus,
 textarea:focus {
   outline: 0;
-  border-color: rgba(59, 130, 246, 0.7);
-  box-shadow: 0 0 0 4px rgba(59, 130, 246, 0.12);
+  border-color: rgba(201, 133, 104, 0.75);
+  box-shadow: 0 0 0 4px rgba(201, 133, 104, 0.16);
 }
 
 textarea {
@@ -241,24 +240,23 @@ textarea {
 .ghost-btn,
 .small-btn {
   border: 0;
-  border-radius: 8px;
+  border-radius: 999px;
   min-height: 42px;
-  padding: 8px 16px;
+  padding: 8px 18px;
   font-weight: 700;
 }
 
 .primary-btn {
-  background: linear-gradient(135deg, var(--blue), var(--cyan));
-  background-size: 160% 160%;
+  background: #c98568;
   color: #fff;
-  box-shadow: 0 8px 20px rgba(59, 130, 246, 0.24);
-  animation: colorSweep 7s ease infinite;
+  box-shadow: 0 10px 22px rgba(201, 133, 104, 0.22);
 }
 
 .ghost-btn,
 .small-btn {
-  background: #eef6ff;
-  color: #23314d;
+  background: #f3eadc;
+  color: #5b4e45;
+  border: 1px solid #e5d7c6;
 }
 
 .primary-btn:hover,
@@ -275,8 +273,8 @@ textarea {
 }
 
 .danger-btn {
-  background: #fff1f2;
-  color: #be123c;
+  background: #f8e4e1;
+  color: #a1524d;
 }
 
 .app-shell {
@@ -292,9 +290,9 @@ textarea {
   display: flex;
   flex-direction: column;
   gap: 24px;
-  padding: 22px;
-  background: rgba(255, 255, 255, 0.9);
-  backdrop-filter: blur(18px);
+  padding: 24px;
+  background: rgba(255, 253, 248, 0.94);
+  backdrop-filter: blur(14px);
   border-right: 1px solid var(--line);
 }
 
@@ -318,16 +316,27 @@ textarea {
 .nav-list button {
   text-align: left;
   border: 0;
-  border-radius: 8px;
-  padding: 10px 12px;
+  border-radius: 999px;
+  padding: 10px 14px;
   background: transparent;
-  color: #3a455d;
+  color: #5d5148;
   transition: background-color 0.18s ease, color 0.18s ease, transform 0.18s ease;
 }
 
+.nav-list button::before {
+  content: "";
+  display: inline-block;
+  width: 8px;
+  height: 8px;
+  margin-right: 10px;
+  border: 1.5px solid currentColor;
+  border-radius: 999px;
+  vertical-align: middle;
+}
+
 .nav-list button.active {
-  background: linear-gradient(135deg, #e0f2fe, #ede9fe);
-  color: #1d4ed8;
+  background: #efe2d1;
+  color: #8c523e;
   font-weight: 700;
 }
 
@@ -350,13 +359,13 @@ textarea {
 }
 
 .mode-badge {
-  background: #dcfce7;
-  color: #15803d;
+  background: #edf3e7;
+  color: #607653;
 }
 
 .workspace {
   min-width: 0;
-  padding: 28px;
+  padding: 34px;
   animation: fadeUp 0.38s ease both;
 }
 
@@ -370,17 +379,17 @@ textarea {
 
 .alert {
   margin-bottom: 16px;
-  padding: 10px 14px;
+  padding: 12px 16px;
   border-radius: var(--radius);
-  background: #ecfdf5;
-  border: 1px solid #a7f3d0;
-  color: #065f46;
+  background: #eef4e8;
+  border: 1px solid #d3dfc7;
+  color: #5e704d;
 }
 
 .alert.error {
-  background: #fff1f2;
-  border-color: #fecdd3;
-  color: #9f1239;
+  background: #f8e5e0;
+  border-color: #e8c7bf;
+  color: #985349;
 }
 
 .stats-grid {
@@ -394,15 +403,15 @@ textarea {
 .panel,
 .doc-card,
 .status-box {
-  background: rgba(255, 255, 255, 0.94);
+  background: rgba(255, 253, 248, 0.96);
   border: 1px solid var(--line);
   border-radius: var(--radius);
 }
 
 .stat-card {
-  padding: 18px;
-  border-top-width: 4px;
-  box-shadow: 0 10px 28px rgba(37, 52, 92, 0.07);
+  padding: 20px;
+  border-top-width: 0;
+  box-shadow: 0 12px 32px rgba(100, 80, 60, 0.08);
   animation: fadeUp 0.35s ease both;
 }
 
@@ -418,23 +427,23 @@ textarea {
 }
 
 .accent-blue {
-  border-top-color: var(--blue);
-  background: linear-gradient(180deg, rgba(59, 130, 246, 0.1), rgba(255, 255, 255, 0.96));
+  border-color: rgba(143, 174, 192, 0.45);
+  background: #f1f6f7;
 }
 
 .accent-green {
-  border-top-color: var(--green);
-  background: linear-gradient(180deg, rgba(16, 185, 129, 0.1), rgba(255, 255, 255, 0.96));
+  border-color: rgba(169, 190, 163, 0.5);
+  background: #f3f6ee;
 }
 
 .accent-orange {
-  border-top-color: var(--orange);
-  background: linear-gradient(180deg, rgba(245, 158, 11, 0.12), rgba(255, 255, 255, 0.96));
+  border-color: rgba(201, 133, 104, 0.45);
+  background: #f7eee6;
 }
 
 .accent-pink {
-  border-top-color: var(--pink);
-  background: linear-gradient(180deg, rgba(236, 72, 153, 0.1), rgba(255, 255, 255, 0.96));
+  border-color: rgba(214, 160, 165, 0.5);
+  background: #f8eeee;
 }
 
 .split-layout,
@@ -446,8 +455,8 @@ textarea {
 }
 
 .panel {
-  padding: 18px;
-  box-shadow: 0 12px 30px rgba(37, 52, 92, 0.07);
+  padding: 22px;
+  box-shadow: 0 14px 36px rgba(100, 80, 60, 0.08);
   animation: fadeUp 0.34s ease both;
 }
 
@@ -476,14 +485,14 @@ textarea {
   justify-content: space-between;
   align-items: center;
   gap: 12px;
-  padding: 12px;
+  padding: 14px;
   transition: border-color 0.18s ease, box-shadow 0.18s ease, transform 0.18s ease;
   animation: fadeUp 0.28s ease both;
 }
 
 .doc-card:hover {
-  border-color: #c7d2fe;
-  box-shadow: 0 10px 24px rgba(37, 52, 92, 0.08);
+  border-color: #dcc6b1;
+  box-shadow: 0 12px 26px rgba(100, 80, 60, 0.1);
   transform: translateY(-1px);
 }
 
@@ -500,30 +509,30 @@ textarea {
 }
 
 .doc-type {
-  background: #f5f3ff;
-  color: #6d28d9;
+  background: #f1e8dc;
+  color: #8c5b46;
 }
 
 .status-pending {
-  background: #fff7ed;
-  color: #9a3412;
+  background: #f8eadf;
+  color: #9b5d45;
 }
 
 .status-approved,
 .status-delivered {
-  background: #ecfdf5;
-  color: #047857;
+  background: #edf4e7;
+  color: #637b55;
 }
 
 .status-returned,
 .status-cancelled {
-  background: #fff1f2;
-  color: #be123c;
+  background: #f8e6e4;
+  color: #a8554f;
 }
 
 .status-sent {
-  background: #eff6ff;
-  color: #1d4ed8;
+  background: #edf4f5;
+  color: #5f7b83;
 }
 
 .status-select {
@@ -544,7 +553,7 @@ textarea {
 
 .status-box {
   padding: 14px;
-  background: linear-gradient(135deg, #ffffff, #f8fbff);
+  background: #fffaf2;
 }
 
 .status-box span {
@@ -613,7 +622,7 @@ textarea {
   padding: 12px;
   border: 1px solid var(--line);
   border-radius: var(--radius);
-  background: #fff;
+  background: #fffdf8;
 }
 
 .audit-item span {

@@ -1,0 +1,65 @@
+name: Firebase Hosting
+
+on:
+  push:
+    branches:
+      - main
+  pull_request:
+    branches:
+      - main
+
+permissions:
+  checks: write
+  contents: read
+  pull-requests: write
+
+jobs:
+  validate:
+    name: Validate JavaScript
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Check app scripts
+        uses: actions/setup-node@v4
+        with:
+          node-version: 22
+
+      - name: Run syntax checks
+        run: |
+          node --check js/app.js
+          node --check js/firebase-config.js
+
+  deploy_live:
+    name: Deploy live hosting
+    needs: validate
+    if: github.event_name == 'push'
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Deploy to Firebase Hosting live
+        uses: FirebaseExtended/action-hosting-deploy@v0.10.0
+        with:
+          repoToken: ${{ secrets.GITHUB_TOKEN }}
+          firebaseServiceAccount: ${{ secrets.FIREBASE_SERVICE_ACCOUNT_SARABUN_D3BA6 }}
+          channelId: live
+          projectId: sarabun-d3ba6
+
+  deploy_preview:
+    name: Deploy preview hosting
+    needs: validate
+    if: github.event_name == 'pull_request'
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Deploy to Firebase Hosting preview
+        uses: FirebaseExtended/action-hosting-deploy@v0.10.0
+        with:
+          repoToken: ${{ secrets.GITHUB_TOKEN }}
+          firebaseServiceAccount: ${{ secrets.FIREBASE_SERVICE_ACCOUNT_SARABUN_D3BA6 }}
+          projectId: sarabun-d3ba6

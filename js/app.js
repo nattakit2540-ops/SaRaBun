@@ -69,6 +69,20 @@
     return ["admin", "approver"].includes((currentUser && currentUser.role) || "admin");
   }
 
+  function syncAccessControls() {
+    const isAdmin = canEditDocuments();
+    document.querySelectorAll(".admin-only").forEach((element) => {
+      element.classList.toggle("hidden", !isAdmin);
+      element.setAttribute("aria-hidden", String(!isAdmin));
+    });
+
+    const adminLoginButton = document.getElementById("adminLoginBtn");
+    if (adminLoginButton) adminLoginButton.classList.toggle("hidden", isAdmin);
+
+    const logoutButton = document.getElementById("logoutBtn");
+    if (logoutButton) logoutButton.textContent = isAdmin ? "ออกจากระบบ Admin" : "กลับหน้าแรก";
+  }
+
   function nowIso() {
     return new Date().toISOString();
   }
@@ -162,7 +176,7 @@
     const slashMatch = text.match(/(\d{1,4})\s*\/\s*(\d{4})/);
     const tailMatch = text.match(/\/\s*(\d{1,4})\s*$/);
 
-    if (type === "memo" && slashMatch) {
+    if ((type === "memo" || type === "order") && slashMatch) {
       return { number: text, running: Number(slashMatch[1]), year: Number(slashMatch[2]) };
     }
 
@@ -176,7 +190,7 @@
   }
 
   function formatOrderNumber(year, running) {
-    return `คส.${year}/${padRunning(running)}`;
+    return `คส.${padRunning(running)}/${year}`;
   }
 
   function formatMemoNumber(groupKey, year, running, fiscalYearCode) {
@@ -361,13 +375,13 @@
     const issuedDate = form.get("issuedDate");
     const manual = parseManualNumber("order", form.get("manualNumber"), issuedDate);
     const next = manual || await nextNumber("order", issuedDate);
-    const number = manual ? manual.number : formatOrderNumber(next.year, next.running);
+    const number = formatOrderNumber(next.year, next.running);
     if (manual) await syncCounter("order", next.year, next.running);
     const subject = form.get("subject").trim();
     const signer = form.get("signer").trim();
     const detail = form.get("detail").trim();
     const category = form.get("category");
-    const responsibleUnit = form.get("responsibleUnit").trim();
+    const responsibleUnit = form.get("responsibleUnit").trim() || getSettings().schoolName;
     const effectiveDate = form.get("effectiveDate");
     const coordinator = form.get("coordinator").trim();
     const attachment = await uploadAttachment(form.get("attachment"), "orders");
@@ -388,7 +402,7 @@
       signer,
       status: "approved",
       draft: buildOrderDraft({ number, subject, issuedDate, category, detail, signer, responsibleUnit, effectiveDate, coordinator }),
-      metadata: { documentType: "school_order", numberingRule: "คส.ปีพ.ศ./ลำดับ", responsibleUnit },
+      metadata: { documentType: "school_order", numberingRule: "คส.ลำดับ/ปีพ.ศ.", responsibleUnit },
       keywords: createKeywords(number, subject, signer, category, detail, responsibleUnit, coordinator),
       attachment,
       auditLog: [{ action: "created", by: currentUser.displayName || currentUser.uid, at: nowIso(), status: "approved" }],
@@ -786,14 +800,15 @@
 
   function renderOrders() {
     const orders = documents.filter((doc) => doc.module === "orders");
+    const settings = getSettings();
     content.innerHTML = `<section class="form-grid">
       <form id="orderForm" class="panel form-panel">
         <div class="panel-head"><h3>สร้างคำสั่งโรงเรียน</h3><button class="ghost-btn" data-export="orders" type="button">Export CSV</button></div>
         <label>เรื่อง<input name="subject" required></label>
-        <label>เลขคำสั่งย้อนหลัง/กำหนดเอง <span class="field-hint">เว้นว่างเพื่อให้ระบบรันเลขถัดไปอัตโนมัติ เช่น คส.2568/024</span><input name="manualNumber" placeholder="คส.2568/024"></label>
+        <label>เลขคำสั่งย้อนหลัง/กำหนดเอง <span class="field-hint">กรอกเฉพาะเลข เช่น 001/2569 ระบบจะเติม คส. ให้อัตโนมัติ หรือเว้นว่างเพื่อรันเลขต่อ</span><input name="manualNumber" placeholder="001/2569"></label>
         <div class="two-col"><label>วันที่ออก<input name="issuedDate" type="date" required></label><label>วันที่มีผล<input name="effectiveDate" type="date"></label></div>
         <label>ประเภท<select name="category" required><option>แต่งตั้ง</option><option>มอบหมายงาน</option><option>เวรปฏิบัติราชการ</option><option>กิจกรรมโรงเรียน</option><option>จัดซื้อจัดจ้าง</option><option>อื่น ๆ</option></select></label>
-        <label>หน่วยงานรับผิดชอบ<input name="responsibleUnit" placeholder="กลุ่มบริหารทั่วไป"></label>
+        <label>หน่วยงานรับผิดชอบ<input name="responsibleUnit" value="${escapeHtml(settings.schoolName)}" placeholder="${escapeHtml(settings.schoolName)}"></label>
         <label>รายละเอียด<textarea name="detail" rows="5" required></textarea></label>
         <label>ผู้ประสานงาน<input name="coordinator"></label>
         <div class="two-col"><label>ผู้ลงนาม<input name="signer" required></label><label>ไฟล์แนบ<input name="attachment" type="file"></label></div>
@@ -1027,8 +1042,8 @@
       audit: "ประวัติ",
       settings: "ตั้งค่าระบบ"
     }[route] || "Dashboard";
+    syncAccessControls();
     document.querySelectorAll(".nav-list button").forEach((button) => button.classList.toggle("active", button.dataset.route === route));
-    document.querySelectorAll('[data-route="settings"]').forEach((button) => button.classList.toggle("hidden", !canEditDocuments()));
     if (route === "settings" && !canEditDocuments()) {
       setAlert("เฉพาะ Admin เท่านั้นที่เข้าตั้งค่าระบบได้", "error");
       route = "dashboard";
@@ -1059,8 +1074,7 @@
     appView.classList.remove("hidden");
     currentUser.role = currentUser.role || getSettings().defaultUserRole || "officer";
     document.getElementById("modeBadge").textContent = `${currentUser.loginType === "public" ? "Public" : isDemoUser(currentUser) ? "Demo Mode" : "Firebase Mode"} · ${currentUser.role}`;
-    document.getElementById("adminLoginBtn").classList.toggle("hidden", canEditDocuments());
-    document.getElementById("logoutBtn").textContent = canEditDocuments() ? "ออกจากระบบ Admin" : "กลับหน้าแรก";
+    syncAccessControls();
     documents = await listDocuments();
     renderRoute(currentRoute);
   }

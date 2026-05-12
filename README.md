@@ -153,6 +153,35 @@ await admin.auth().setCustomUserClaims("ADMIN_UID", { admin: true });
 
 หมายเหตุด้านสิทธิ์: หน้าเว็บซ่อนปุ่มแก้ไข/ลบสำหรับคนทั่วไป และ Security Rules บังคับซ้ำด้วย custom claim `admin`
 
+## GitHub Actions + Firebase CI/CD
+
+โปรเจกต์มี workflow ที่ `.github/workflows/firebase-hosting.yml`
+
+- ทุกครั้งที่ `push` เข้า branch `main` ระบบจะตรวจ JavaScript แล้ว deploy ไป Firebase Hosting live อัตโนมัติ
+- ทุก Pull Request เข้า `main` ระบบจะสร้าง Firebase Hosting preview channel สำหรับทดสอบก่อน merge
+
+ก่อนใช้งาน CI/CD ให้เพิ่ม GitHub Secret ชื่อ:
+
+```text
+FIREBASE_SERVICE_ACCOUNT_SARABUN_D3BA6
+```
+
+วิธีสร้างค่า secret ที่ง่ายที่สุด:
+
+```bash
+firebase init hosting:github
+```
+
+เลือกโปรเจกต์ `sarabun-d3ba6` และ repo `nattakit2540-ops/SaRaBun` แล้ว Firebase CLI จะช่วยสร้าง service account และใส่ secret ให้ GitHub อัตโนมัติ หากต้องตั้งเอง ให้สร้าง Service Account JSON ใน Firebase/Google Cloud แล้วนำ JSON ทั้งก้อนใส่ใน GitHub repository settings > Secrets and variables > Actions
+
+หลังตั้ง secret แล้ว การ deploy ปกติจะเหลือเพียง:
+
+```bash
+git add .
+git commit -m "Update site"
+git push
+```
+
 ## ส่งขึ้น GitHub
 
 เครื่องนี้ควรมี `git` และ `gh` หรือใช้ GitHub Desktop ก่อนส่งขึ้น GitHub
@@ -170,12 +199,12 @@ git push -u origin main
 
 ## หลักการเลขเอกสาร
 
-- คำสั่งโรงเรียน: `คส.2568/001`
+- คำสั่งโรงเรียน: `คส.001/2568`
 - บันทึกข้อความ: `วช 001/2568`
 - บันทึกข้อความกลุ่มงบประมาณ/การเงิน หรือพัสดุ: `งบ 001/2568 · งป2568`
 - หนังสือส่ง: `ที่ ศธ 04122.014/001`
 - เลขทะเบียน reset ตามปี พ.ศ. ปฏิทิน โดยแยก counter ตามประเภทเอกสารและกลุ่มงานที่จำเป็น
-- สามารถกรอกเลขย้อนหลัง/เลขกำหนดเองได้ในฟอร์ม หากกรอก `คส.2568/024` ระบบจะปรับ counter ให้เลขอัตโนมัติครั้งถัดไปเป็น `คส.2568/025`
+- สามารถกรอกเลขย้อนหลัง/เลขกำหนดเองได้ในฟอร์ม หากกรอกคำสั่งโรงเรียนเป็น `024/2568` ระบบจะแสดงเป็น `คส.024/2568` และปรับ counter ให้เลขอัตโนมัติครั้งถัดไปเป็น `คส.025/2568`
 - หากไม่กรอกเลขกำหนดเอง ระบบจะถือว่าเป็นงานล่าสุดและออกเลขถัดไปให้อัตโนมัติ
 
 แนวทางออกแบบอ้างอิงระเบียบสำนักนายกรัฐมนตรีว่าด้วยงานสารบรรณ พ.ศ. 2526 และที่แก้ไขเพิ่มเติมถึงฉบับที่ 4 พ.ศ. 2564 ในระดับรูปแบบทะเบียนและข้อมูลกำกับเอกสาร

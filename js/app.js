@@ -761,7 +761,7 @@
   }
 
   function emptyState(text) {
-    return `<div class="empty-state">${text}</div>`;
+    return `<div class="empty-state">${text} ✨</div>`;
   }
 
   function docCard(doc, options) {
@@ -795,7 +795,7 @@
     });
     content.replaceChildren(template);
     document.getElementById("statusSummary").innerHTML = ["pending", "approved", "sent", "delivered"].map((status) => `<div class="status-box"><span>${statusLabels[status]}</span><strong>${documents.filter((doc) => doc.status === status).length}</strong></div>`).join("");
-    document.getElementById("recentDocuments").innerHTML = documents.length ? documents.slice(0, 6).map((doc) => docCard(doc)).join("") : emptyState("ยังไม่มีเอกสารในระบบ");
+    document.getElementById("recentDocuments").innerHTML = documents.length ? documents.slice(0, 6).map((doc) => docCard(doc)).join("") : emptyState("ยังไม่มีเอกสารล่าสุด");
   }
 
   function renderOrders() {

@@ -1,0 +1,105 @@
+<!doctype html>
+<html lang="th">
+  <head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <title>E-SARABAN SCHOOL</title>
+    <link rel="stylesheet" href="./css/style.css">
+  </head>
+  <body>
+    <main id="loginView" class="login-shell">
+      <section class="login-panel">
+        <img class="school-logo login-logo" src="./assets/obec-logo.png" alt="โลโก้ สพฐ" onerror="this.replaceWith(Object.assign(document.createElement('span'), { className: 'brand-mark login-logo', textContent: 'สพฐ' }))">
+        <div>
+          <p class="eyebrow">ระบบสารบรรณอิเล็กทรอนิกส์โรงเรียน</p>
+          <h1>E-SARABAN SCHOOL</h1>
+          <h2 id="loginSchoolName" class="school-name">โรงเรียนชุมชนบ้านหนองผึ้ง (ประพันธ์คุรุราษฎร์อุทิศ)</h2>
+          <p class="muted">เลือกใช้งานทั่วไปเพื่อบันทึกเลขเอกสาร หรือเข้าสู่ระบบ Admin เพื่อจัดการข้อมูล</p>
+        </div>
+        <div id="loginChoice" class="login-actions">
+          <button id="publicAccessBtn" class="primary-btn" type="button">ใช้งานทั่วไป</button>
+          <button id="showAdminLoginBtn" class="ghost-btn" type="button">Admin</button>
+        </div>
+        <form id="loginForm" class="stack hidden">
+          <label>
+            Admin ID / Email
+            <input id="username" name="username" autocomplete="username" value="" required>
+          </label>
+          <label>
+            Password
+            <input id="password" name="password" type="password" autocomplete="current-password" value="" required>
+          </label>
+          <button class="primary-btn" type="submit">เข้าสู่ระบบ</button>
+          <p id="loginMessage" class="form-message"></p>
+        </form>
+      </section>
+    </main>
+
+    <div id="appView" class="app-shell hidden">
+      <aside class="sidebar">
+        <div class="app-title">
+          <img class="school-logo small" src="./assets/obec-logo.png" alt="โลโก้ สพฐ" onerror="this.replaceWith(Object.assign(document.createElement('span'), { className: 'brand-mark small', textContent: 'สพฐ' }))">
+          <div>
+            <strong>E-SARABAN</strong>
+            <span id="sidebarSchoolName">โรงเรียนชุมชนบ้านหนองผึ้ง</span>
+          </div>
+        </div>
+        <nav class="nav-list" aria-label="เมนูหลัก">
+          <button data-route="dashboard" class="active">Dashboard</button>
+          <button data-route="orders">คำสั่งโรงเรียน</button>
+          <button data-route="memos">บันทึกข้อความ</button>
+          <button data-route="outgoing">หนังสือส่ง</button>
+          <button data-route="search">ค้นหาย้อนหลัง</button>
+          <button data-route="audit">ประวัติ</button>
+          <button data-route="settings">ตั้งค่าระบบ</button>
+        </nav>
+        <div class="sidebar-footer">
+          <span id="modeBadge" class="mode-badge">Demo Mode</span>
+          <button id="adminLoginBtn" class="ghost-btn" type="button">เข้าสู่ระบบ Admin</button>
+          <button id="logoutBtn" class="ghost-btn" type="button">ออกจากระบบ</button>
+        </div>
+      </aside>
+
+      <section class="workspace">
+        <header class="topbar">
+          <div>
+            <p class="eyebrow" id="topbarSchoolName">โรงเรียนชุมชนบ้านหนองผึ้ง (ประพันธ์คุรุราษฎร์อุทิศ)</p>
+            <h2 id="pageTitle">Dashboard</h2>
+          </div>
+          <div class="topbar-actions">
+            <button id="refreshBtn" class="ghost-btn" type="button">รีเฟรช</button>
+          </div>
+        </header>
+
+        <div id="alert" class="alert hidden"></div>
+        <div id="content"></div>
+      </section>
+    </div>
+
+    <template id="dashboardTemplate">
+      <section class="stats-grid">
+        <article class="stat-card accent-blue"><span>คำสั่ง</span><strong data-stat="orders">0</strong></article>
+        <article class="stat-card accent-green"><span>บันทึกข้อความ</span><strong data-stat="memos">0</strong></article>
+        <article class="stat-card accent-orange"><span>หนังสือส่ง</span><strong data-stat="outgoing">0</strong></article>
+        <article class="stat-card accent-pink"><span>ไฟล์แนบ</span><strong data-stat="attachments">0</strong></article>
+      </section>
+      <section class="split-layout">
+        <div class="panel">
+          <div class="panel-head">
+            <h3>สถานะเอกสาร</h3>
+          </div>
+          <div class="status-grid" id="statusSummary"></div>
+        </div>
+        <div class="panel">
+          <div class="panel-head">
+            <h3>เอกสารล่าสุด</h3>
+          </div>
+          <div id="recentDocuments" class="doc-list"></div>
+        </div>
+      </section>
+    </template>
+
+    <script src="./js/firebase-config.js"></script>
+    <script src="./js/app.js"></script>
+  </body>
+</html>

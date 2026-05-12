@@ -1,0 +1,6 @@
+.git/
+gitdata/
+*.log
+node_modules/
+.firebase/
+.firebaserc.local

@@ -292,13 +292,18 @@
     const services = await loadFirebase().catch(() => null);
     if (!services) return readLocal();
 
-    const snapshot = await services.firestore.getDocs(
-      services.firestore.query(
-        services.firestore.collection(services.db, "documents"),
-        services.firestore.orderBy("createdAt", "desc")
-      )
-    );
-    return snapshot.docs.map((doc) => doc.data());
+    try {
+      const snapshot = await services.firestore.getDocs(
+        services.firestore.query(
+          services.firestore.collection(services.db, "documents"),
+          services.firestore.orderBy("createdAt", "desc")
+        )
+      );
+      return snapshot.docs.map((doc) => doc.data());
+    } catch (error) {
+      console.error("Failed to list documents from Firebase, falling back to local storage:", error);
+      return readLocal();
+    }
   }
 
   async function saveDocument(documentItem) {
@@ -310,8 +315,16 @@
       return documentItem;
     }
 
-    await services.firestore.setDoc(services.firestore.doc(services.db, "documents", documentItem.id), documentItem);
-    return documentItem;
+    try {
+      await services.firestore.setDoc(services.firestore.doc(services.db, "documents", documentItem.id), documentItem);
+      return documentItem;
+    } catch (error) {
+      console.error("Failed to save document to Firebase, saving locally:", error);
+      const items = readLocal();
+      items.unshift(documentItem);
+      writeLocal(items);
+      throw error;
+    }
   }
 
   async function nextNumber(type, dateValue, scope) {
@@ -321,13 +334,18 @@
     const year = buddhistYear(dateValue);
     const id = `${type}_${year}_${scope || "general"}`;
     const ref = services.firestore.doc(services.db, "counters", id);
-    const running = await services.firestore.runTransaction(services.db, async (transaction) => {
-      const snapshot = await transaction.get(ref);
-      const nextValue = (snapshot.exists() ? snapshot.data().running : 0) + 1;
-      transaction.set(ref, { type, year, scope: scope || "general", running: nextValue, updatedAt: nowIso() }, { merge: true });
-      return nextValue;
-    });
-    return { year, running };
+    try {
+      const running = await services.firestore.runTransaction(services.db, async (transaction) => {
+        const snapshot = await transaction.get(ref);
+        const nextValue = (snapshot.exists() ? snapshot.data().running : 0) + 1;
+        transaction.set(ref, { type, year, scope: scope || "general", running: nextValue, updatedAt: nowIso() }, { merge: true });
+        return nextValue;
+      });
+      return { year, running };
+    } catch (error) {
+      console.error("Failed to run Firebase counter transaction, falling back to local counter:", error);
+      return getNextLocalNumber(type, dateValue, scope);
+    }
   }
 
   async function syncCounter(type, year, running, scope) {
@@ -340,11 +358,16 @@
 
     const id = `${type}_${year}_${scope || "general"}`;
     const ref = services.firestore.doc(services.db, "counters", id);
-    await services.firestore.runTransaction(services.db, async (transaction) => {
-      const snapshot = await transaction.get(ref);
-      const current = snapshot.exists() ? snapshot.data().running || 0 : 0;
-      transaction.set(ref, { type, year, scope: scope || "general", running: Math.max(current, running), updatedAt: nowIso() }, { merge: true });
-    });
+    try {
+      await services.firestore.runTransaction(services.db, async (transaction) => {
+        const snapshot = await transaction.get(ref);
+        const current = snapshot.exists() ? snapshot.data().running || 0 : 0;
+        transaction.set(ref, { type, year, scope: scope || "general", running: Math.max(current, running), updatedAt: nowIso() }, { merge: true });
+      });
+    } catch (error) {
+      console.error("Failed to sync Firebase counter, syncing locally:", error);
+      syncLocalCounter(type, year, running, scope);
+    }
   }
 
   async function uploadAttachment(file, path) {
@@ -972,25 +995,52 @@
     const orderForm = document.getElementById("orderForm");
     if (orderForm) orderForm.addEventListener("submit", async (event) => {
       event.preventDefault();
-      await createOrder(new FormData(orderForm));
-      setAlert("บันทึกคำสั่งโรงเรียนเรียบร้อย");
-      await loadAndRender();
+      const submitBtn = orderForm.querySelector('button[type="submit"]');
+      if (submitBtn) submitBtn.disabled = true;
+      try {
+        await createOrder(new FormData(orderForm));
+        setAlert("บันทึกคำสั่งโรงเรียนเรียบร้อย");
+        await loadAndRender();
+      } catch (error) {
+        console.error(error);
+        setAlert(error.message || "เกิดข้อผิดพลาดในการบันทึกคำสั่ง", "error");
+      } finally {
+        if (submitBtn) submitBtn.disabled = false;
+      }
     });
 
     const memoForm = document.getElementById("memoForm");
     if (memoForm) memoForm.addEventListener("submit", async (event) => {
       event.preventDefault();
-      await createMemo(new FormData(memoForm));
-      setAlert("บันทึกข้อความเรียบร้อย");
-      await loadAndRender();
+      const submitBtn = memoForm.querySelector('button[type="submit"]');
+      if (submitBtn) submitBtn.disabled = true;
+      try {
+        await createMemo(new FormData(memoForm));
+        setAlert("บันทึกข้อความเรียบร้อย");
+        await loadAndRender();
+      } catch (error) {
+        console.error(error);
+        setAlert(error.message || "เกิดข้อผิดพลาดในการบันทึกข้อความ", "error");
+      } finally {
+        if (submitBtn) submitBtn.disabled = false;
+      }
     });
 
     const outgoingForm = document.getElementById("outgoingForm");
     if (outgoingForm) outgoingForm.addEventListener("submit", async (event) => {
       event.preventDefault();
-      await createOutgoing(new FormData(outgoingForm));
-      setAlert("บันทึกหนังสือส่งเรียบร้อย");
-      await loadAndRender();
+      const submitBtn = outgoingForm.querySelector('button[type="submit"]');
+      if (submitBtn) submitBtn.disabled = true;
+      try {
+        await createOutgoing(new FormData(outgoingForm));
+        setAlert("บันทึกหนังสือส่งเรียบร้อย");
+        await loadAndRender();
+      } catch (error) {
+        console.error(error);
+        setAlert(error.message || "เกิดข้อผิดพลาดในการบันทึกหนังสือส่ง", "error");
+      } finally {
+        if (submitBtn) submitBtn.disabled = false;
+      }
     });
 
     const searchForm = document.getElementById("searchForm");
@@ -1126,6 +1176,10 @@
   document.getElementById("refreshBtn").addEventListener("click", loadAndRender);
   document.querySelectorAll(".nav-list button").forEach((button) => button.addEventListener("click", () => renderRoute(button.dataset.route)));
   window.addEventListener("error", (event) => setAlert(event.message || "เกิดข้อผิดพลาด", "error"));
+  window.addEventListener("unhandledrejection", (event) => {
+    console.error("Unhandled promise rejection:", event.reason);
+    setAlert(event.reason?.message || event.reason || "เกิดข้อผิดพลาดในการประมวลผล", "error");
+  });
 
   loadAndRender();
 })();

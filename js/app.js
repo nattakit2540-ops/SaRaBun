@@ -62,7 +62,8 @@
   }
 
   function canEditDocuments() {
-    return ((currentUser && currentUser.role) || "public") === "admin";
+    const role = (currentUser && currentUser.role) || "public";
+    return ["admin", "officer"].includes(role);
   }
 
   function canApproveDocuments() {
@@ -277,12 +278,14 @@
     }
 
     const credential = await services.authFns.signInWithEmailAndPassword(services.auth, username, password);
+    const tokenResult = await credential.user.getIdTokenResult();
+    const isAdmin = tokenResult.claims.admin === true;
     const user = {
       uid: credential.user.uid,
       email: credential.user.email,
       displayName: credential.user.displayName || credential.user.email,
       mode: "firebase",
-      role: getSettings().defaultUserRole || "officer"
+      role: isAdmin ? "admin" : (getSettings().defaultUserRole || "officer")
     };
     localStorage.setItem(authKey, JSON.stringify(user));
     return user;
@@ -540,7 +543,13 @@
       writeLocal(readLocal().map((item) => (item.id === updated.id ? updated : item)));
       return;
     }
-    await services.firestore.setDoc(services.firestore.doc(services.db, "documents", updated.id), updated, { merge: true });
+    try {
+      await services.firestore.setDoc(services.firestore.doc(services.db, "documents", updated.id), updated, { merge: true });
+    } catch (error) {
+      console.error("Failed to persist updated document to Firebase, updating locally:", error);
+      writeLocal(readLocal().map((item) => (item.id === updated.id ? updated : item)));
+      throw error;
+    }
   }
 
   async function deleteDocument(id) {
@@ -550,14 +559,20 @@
     }
     const item = documents.find((doc) => doc.id === id);
     if (!item || !window.confirm(`ลบเอกสาร ${item.number || ""} ใช่หรือไม่`)) return;
-    const services = await loadFirebase().catch(() => null);
-    if (!services) {
-      writeLocal(readLocal().filter((doc) => doc.id !== id));
-    } else {
-      await services.firestore.deleteDoc(services.firestore.doc(services.db, "documents", id));
+    
+    try {
+      const services = await loadFirebase().catch(() => null);
+      if (!services) {
+        writeLocal(readLocal().filter((doc) => doc.id !== id));
+      } else {
+        await services.firestore.deleteDoc(services.firestore.doc(services.db, "documents", id));
+      }
+      setAlert("ลบเอกสารเรียบร้อย");
+      await loadAndRender();
+    } catch (error) {
+      console.error(error);
+      setAlert(error.message || "เกิดข้อผิดพลาดในการลบเอกสาร", "error");
     }
-    setAlert("ลบเอกสารเรียบร้อย");
-    await loadAndRender();
   }
 
   async function editDocument(id) {
@@ -602,9 +617,15 @@
     item.keywords = createKeywords(item.number, item.subject, item.recipientOrg, item.workGroupLabel, item.signer, item.content, item.body);
     item.auditLog = item.auditLog || [];
     item.auditLog.unshift({ action: "edited", by: currentUser.displayName || currentUser.uid, at: nowIso(), status: item.status, note: "แก้ไขข้อมูลเอกสาร" });
-    await persistUpdatedDocument(item);
-    setAlert("แก้ไขเอกสารและบันทึก audit log แล้ว");
-    await loadAndRender();
+    
+    try {
+      await persistUpdatedDocument(item);
+      setAlert("แก้ไขเอกสารและบันทึก audit log แล้ว");
+      await loadAndRender();
+    } catch (error) {
+      console.error(error);
+      setAlert(error.message || "เกิดข้อผิดพลาดในการแก้ไขเอกสาร", "error");
+    }
   }
 
   async function changeStatus(id, status) {
@@ -614,9 +635,15 @@
     item.updatedAt = nowIso();
     item.auditLog = item.auditLog || [];
     item.auditLog.unshift({ action: "status_changed", by: currentUser.displayName || currentUser.uid, at: nowIso(), status });
-    await persistUpdatedDocument(item);
-    setAlert("อัปเดตสถานะและบันทึก audit log แล้ว");
-    await loadAndRender();
+    
+    try {
+      await persistUpdatedDocument(item);
+      setAlert("อัปเดตสถานะและบันทึก audit log แล้ว");
+      await loadAndRender();
+    } catch (error) {
+      console.error(error);
+      setAlert(error.message || "เกิดข้อผิดพลาดในการเปลี่ยนสถานะ", "error");
+    }
   }
 
   async function confirmReceipt(id) {
@@ -637,9 +664,15 @@
     item.updatedAt = nowIso();
     item.auditLog = item.auditLog || [];
     item.auditLog.unshift({ action: "receipt_confirmed", by: currentUser.displayName || currentUser.uid, at: nowIso(), status: "delivered", receipt: item.receipt });
-    await persistUpdatedDocument(item);
-    setAlert("ยืนยันการรับหนังสือและบันทึก audit log แล้ว");
-    await loadAndRender();
+    
+    try {
+      await persistUpdatedDocument(item);
+      setAlert("ยืนยันการรับหนังสือและบันทึก audit log แล้ว");
+      await loadAndRender();
+    } catch (error) {
+      console.error(error);
+      setAlert(error.message || "เกิดข้อผิดพลาดในการยืนยันการรับ", "error");
+    }
   }
 
   function searchDocuments(filters) {
@@ -1110,6 +1143,28 @@
     bindPage();
   }
 
+  function showDemoWarningIfNeeded() {
+    const existing = document.getElementById("demoWarningBanner");
+    if (existing) existing.remove();
+
+    if (isDemoUser(currentUser) && hasFirebaseConfig()) {
+      const banner = document.createElement("div");
+      banner.id = "demoWarningBanner";
+      banner.className = "alert error";
+      banner.style.marginBottom = "16px";
+      banner.style.borderRadius = "18px";
+      banner.innerHTML = `⚠️ <strong>คุณกำลังใช้งานในโหมด Local Admin (Demo Mode)</strong><br>
+        ข้อมูลที่แก้ไขหรือลบจะส่งผลเฉพาะในเครื่องนี้เท่านั้น และจะไม่บันทึกลง Firebase ตัวจริง (ทำให้ผู้ใช้ทั่วไปยังเห็นข้อมูลเดิมอยู่)<br>
+        หากต้องการจัดการข้อมูลในระบบจริง กรุณาออกจากระบบแล้วเข้าสู่ระบบด้วย <strong>Firebase Email + Password ของ Admin</strong>`;
+      
+      const workspace = document.querySelector(".workspace");
+      const content = document.getElementById("content");
+      if (workspace && content) {
+        workspace.insertBefore(banner, content);
+      }
+    }
+  }
+
   async function loadAndRender() {
     applyBranding();
     if (!currentUser) {
@@ -1125,6 +1180,7 @@
     currentUser.role = currentUser.role || getSettings().defaultUserRole || "officer";
     document.getElementById("modeBadge").textContent = `${currentUser.loginType === "public" ? "Public" : isDemoUser(currentUser) ? "Demo Mode" : "Firebase Mode"} · ${currentUser.role}`;
     syncAccessControls();
+    showDemoWarningIfNeeded();
     documents = await listDocuments();
     renderRoute(currentRoute);
   }

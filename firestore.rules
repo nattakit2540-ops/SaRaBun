@@ -10,8 +10,7 @@ service cloud.firestore {
     }
 
     match /documents/{documentId} {
-      allow read, create: if signedIn();
-      allow update, delete: if isAdmin();
+      allow read, create, update, delete: if signedIn();
     }
 
     match /counters/{counterId} {
